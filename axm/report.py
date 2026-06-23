@@ -29,8 +29,18 @@ from .certify import CERTIFIED_SUBSET, Outcome
 # Read the toolchain pin so the report names the exact prover the artifact is
 # kernel-checked under; fall back to a sentinel if the file is not alongside.
 _TOOLCHAIN_FILE = pathlib.Path(__file__).resolve().parent.parent / "lean" / "lean-toolchain"
-_SCHEMA = "Bio.PKPD.ConstantInfusion.infusion_safety_bound"
-_SCHEMA_FILE = "lean/BioPKPD/ConstantInfusion.lean"
+
+# verified schema (Lean theorem, source file) per certify schema tag.
+_SCHEMA_INFO = {
+    "constant_infusion": (
+        "Bio.PKPD.ConstantInfusion.infusion_safety_bound",
+        "lean/BioPKPD/ConstantInfusion.lean",
+    ),
+    "repeated_dose_rational": (
+        "Bio.PKPD.RepeatedDose.repeated_dose_window_rational",
+        "lean/BioPKPD/RepeatedDoseRational.lean",
+    ),
+}
 
 
 def _toolchain() -> str:
@@ -77,7 +87,7 @@ def report(spec: dict, outcome: Outcome) -> str:
     lines.append(f"# Exposure-safety certificate report — `{name}`")
     lines.append("")
     lines.append(f"**Verdict:** `{status}`  ")
-    lines.append(f"**Model class:** {CERTIFIED_SUBSET}")
+    lines.append(f"**Model class:** {outcome.detail.get('subset', CERTIFIED_SUBSET)}")
     lines.append("")
 
     if outcome.status == "refused":
@@ -95,15 +105,23 @@ def report(spec: dict, outcome: Outcome) -> str:
         d = outcome.detail
         lines.append("## Outcome: certificate does **not** hold (fail closed)")
         lines.append("")
-        lines.append("The model is inside the certified subset, but the "
-                     "worst-case exposure exceeds the threshold, so no safety "
-                     "certificate can be emitted. **This is a finding, not an "
-                     "error:** under the fitted parameter box the model can "
-                     "cross the toxicity bound.")
+        lines.append("The model is inside the certified subset, but a corner "
+                     "condition is violated, so no safety certificate can be "
+                     "emitted. **This is a finding, not an error:** under the "
+                     "fitted parameter box the model can leave the declared "
+                     "window.")
         lines.append("")
-        lines.append(f"- worst-case steady-state exposure "
-                     f"`R/(ke_lo·V_lo) = {d['worst_case_exposure']}`")
-        lines.append(f"- toxicity threshold `T = {d['threshold']}`")
+        if d.get("schema") == "repeated_dose_rational":
+            lines.append(f"- rational peak ceiling "
+                         f"`D·(1+ke_lo·τ)/(V_lo·ke_lo·τ) = {d['tox_ceiling']}` "
+                         f"vs `Ctox = {d['Ctox']}`")
+            lines.append(f"- rational trough floor "
+                         f"`D·(1−ke_hi·τ)/(V_hi·ke_hi·τ) = {d['eff_floor']}` "
+                         f"vs `Ceff = {d['Ceff']}`")
+        else:
+            lines.append(f"- worst-case steady-state exposure "
+                         f"`R/(ke_lo·V_lo) = {d['worst_case_exposure']}`")
+            lines.append(f"- toxicity threshold `T = {d['threshold']}`")
         lines.append("")
         lines.append("## Parameter provenance")
         lines.append("")
@@ -116,27 +134,55 @@ def report(spec: dict, outcome: Outcome) -> str:
     assert outcome.lean is not None
     d = outcome.detail
     h = proof_hash(outcome.lean)
+    schema = d.get("schema", "constant_infusion")
     lines.append("## Theorem (model-relative, conditional)")
     lines.append("")
-    lines.append("For a one-compartment constant continuous IV infusion model")
-    lines.append("")
-    lines.append("```")
-    lines.append("C(t) = (R / (ke · V)) · (1 − exp(−ke · t)),")
-    lines.append("```")
-    lines.append("")
-    lines.append(f"the plasma concentration the model predicts stays in "
-                 f"`[0, {d['threshold']}]` for **every** time `t ≥ 0` and "
-                 f"**every** parameter value with `ke_lo ≤ ke` and `V_lo ≤ V`.")
-    lines.append("")
-    lines.append("## Assumptions")
-    lines.append("")
-    lines.append(f"- infusion rate `R = {d['R']}` (> 0)")
-    lines.append(f"- fitted lower bounds `ke_lo = {d['ke_lo']}` (> 0), "
-                 f"`V_lo = {d['V_lo']}` (> 0)")
-    lines.append(f"- toxicity threshold `T = {d['threshold']}`")
-    lines.append(f"- **certificate condition** (worst-case / smallest-clearance "
-                 f"corner): `R/(ke_lo·V_lo) = {d['worst_case_exposure']} ≤ "
-                 f"{d['threshold']}` ✓")
+    if schema == "repeated_dose_rational":
+        lines.append("For a one-compartment repeated-IV-bolus regimen (dose `D` "
+                     "every interval `τ`), at steady state")
+        lines.append("")
+        lines.append("```")
+        lines.append("Cmax_ss = D / (V · (1 − exp(−ke·τ))),")
+        lines.append("Ctrough_ss = D · exp(−ke·τ) / (V · (1 − exp(−ke·τ))),")
+        lines.append("```")
+        lines.append("")
+        lines.append(f"the model's steady-state trough stays `≥ Ceff = "
+                     f"{d['Ceff']}` and peak stays `≤ Ctox = {d['Ctox']}` for "
+                     f"**every** parameter value with `ke_lo ≤ ke ≤ ke_hi` and "
+                     f"`V_lo ≤ V ≤ V_hi`.")
+        lines.append("")
+        lines.append("## Assumptions")
+        lines.append("")
+        lines.append(f"- dose `D = {d['D']}` (> 0), interval `τ = {d['tau']}` (> 0)")
+        lines.append(f"- fitted box `ke ∈ [{d['ke_lo']}, {d['ke_hi']}]`, "
+                     f"`V ∈ [{d['V_lo']}, {d['V_hi']}]`")
+        lines.append(f"- validity: `ke_hi·τ < 1` (rational efficacy floor)")
+        lines.append(f"- **certificate conditions** (rational/conservative corner "
+                     f"conditions from `1 + x ≤ exp x`):")
+        lines.append(f"  - peak ceiling `D·(1+ke_lo·τ)/(V_lo·ke_lo·τ) = "
+                     f"{d['tox_ceiling']} ≤ Ctox = {d['Ctox']}` ✓")
+        lines.append(f"  - trough floor `Ceff = {d['Ceff']} ≤ "
+                     f"D·(1−ke_hi·τ)/(V_hi·ke_hi·τ) = {d['eff_floor']}` ✓")
+    else:
+        lines.append("For a one-compartment constant continuous IV infusion model")
+        lines.append("")
+        lines.append("```")
+        lines.append("C(t) = (R / (ke · V)) · (1 − exp(−ke · t)),")
+        lines.append("```")
+        lines.append("")
+        lines.append(f"the plasma concentration the model predicts stays in "
+                     f"`[0, {d['threshold']}]` for **every** time `t ≥ 0` and "
+                     f"**every** parameter value with `ke_lo ≤ ke` and `V_lo ≤ V`.")
+        lines.append("")
+        lines.append("## Assumptions")
+        lines.append("")
+        lines.append(f"- infusion rate `R = {d['R']}` (> 0)")
+        lines.append(f"- fitted lower bounds `ke_lo = {d['ke_lo']}` (> 0), "
+                     f"`V_lo = {d['V_lo']}` (> 0)")
+        lines.append(f"- toxicity threshold `T = {d['threshold']}`")
+        lines.append(f"- **certificate condition** (worst-case / smallest-clearance "
+                     f"corner): `R/(ke_lo·V_lo) = {d['worst_case_exposure']} ≤ "
+                     f"{d['threshold']}` ✓")
     lines.append("")
     lines.append("## Parameter provenance")
     lines.append("")
@@ -144,7 +190,9 @@ def report(spec: dict, outcome: Outcome) -> str:
     lines.append("")
     lines.append("## Proof identity")
     lines.append("")
-    lines.append(f"- verified schema: `{_SCHEMA}` (`{_SCHEMA_FILE}`)")
+    _schema_thm, _schema_file = _SCHEMA_INFO.get(
+        schema, _SCHEMA_INFO["constant_infusion"])
+    lines.append(f"- verified schema: `{_schema_thm}` (`{_schema_file}`)")
     lines.append(f"- kernel-checked under: `{_toolchain()}` + Mathlib")
     lines.append(f"- emitted-artifact SHA-256: `{h}`")
     lines.append("")

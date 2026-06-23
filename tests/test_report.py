@@ -77,3 +77,29 @@ def test_missing_provenance_is_flagged():
     out = certify(s)
     md = report(s, out)
     assert "No parameter provenance supplied" in md
+
+
+# --- repeated-dose report -------------------------------------------------
+
+EXAMPLE_R = REPO / "examples" / "drugY_repeated.json"
+COMMITTED_REPORT_R = REPO / "examples" / "drugY_repeated.report.md"
+COMMITTED_LEAN_R = REPO / "lean" / "BioPKPD" / "CertExampleRepeated.lean"
+
+
+def _spec_r() -> dict:
+    return json.loads(EXAMPLE_R.read_text())
+
+
+def test_repeated_report_in_sync():
+    out = certify(_spec_r())
+    assert report(_spec_r(), out) == COMMITTED_REPORT_R.read_text()
+
+
+def test_repeated_report_names_its_schema_and_hash():
+    out = certify(_spec_r())
+    md = report(_spec_r(), out)
+    assert "repeated IV bolus" in md
+    assert "repeated_dose_window_rational" in md
+    assert "ke_hi·τ < 1" in md
+    import hashlib
+    assert hashlib.sha256(COMMITTED_LEAN_R.read_bytes()).hexdigest() in md

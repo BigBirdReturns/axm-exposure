@@ -30,13 +30,24 @@ jobs:
           python -m axm certify examples/drugX_infusion.json --lean-only > /tmp/regen.lean
           diff -u lean/BioPKPD/CertExample.lean /tmp/regen.lean
           echo "axm certify emits exactly the kernel-checked artifact"
-      - name: Re-render report and confirm it matches the committed report
+      - name: Re-emit repeated-dose example and confirm it matches the committed cert
+        run: |
+          python -m axm certify examples/drugY_repeated.json --lean-only > /tmp/regen_r.lean
+          diff -u lean/BioPKPD/CertExampleRepeated.lean /tmp/regen_r.lean
+          echo "axm certify emits exactly the kernel-checked repeated-dose artifact"
+      - name: Re-render reports and confirm they match the committed reports
         run: |
           python -m axm report examples/drugX_infusion.json > /tmp/regen.md
           diff -u examples/drugX_infusion.report.md /tmp/regen.md
-          echo "axm report renders exactly the committed MIDD report"
-      - name: Confirm the report's proof-identity hash matches the artifact
+          python -m axm report examples/drugY_repeated.json > /tmp/regen_r.md
+          diff -u examples/drugY_repeated.report.md /tmp/regen_r.md
+          echo "axm report renders exactly the committed MIDD reports"
+      - name: Confirm each report's proof-identity hash matches its artifact
         run: |
-          want=$(sha256sum lean/BioPKPD/CertExample.lean | cut -d' ' -f1)
-          grep -q "$want" examples/drugX_infusion.report.md
-          echo "report proof-identity hash == sha256(emitted artifact): $want"
+          for pair in "lean/BioPKPD/CertExample.lean:examples/drugX_infusion.report.md" \
+                      "lean/BioPKPD/CertExampleRepeated.lean:examples/drugY_repeated.report.md"; do
+            art="${pair%%:*}"; rep="${pair##*:}"
+            want=$(sha256sum "$art" | cut -d' ' -f1)
+            grep -q "$want" "$rep"
+            echo "report proof-identity hash == sha256($art): $want"
+          done

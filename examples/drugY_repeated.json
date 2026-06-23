@@ -1,0 +1,20 @@
+{
+  "name": "drugY_repeated",
+  "compartments": 1,
+  "elimination": "first_order",
+  "input": "repeated_bolus",
+  "D": 20,
+  "tau": 8,
+  "parameters": {
+    "ke": [0.08, 0.1],
+    "V": [40, 60]
+  },
+  "Ceff": 0.05,
+  "Ctox": 1.5,
+  "provenance": {
+    "fit": "popPK base model, run 22",
+    "dataset": "PHASE1-MAD q8h cohort",
+    "method": "FOCEI (NONMEM)",
+    "ci": "90% profile-likelihood on ke, V"
+  }
+}

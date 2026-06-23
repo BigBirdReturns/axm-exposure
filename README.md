@@ -26,10 +26,11 @@ built as a Mathlib flagship and kernel-checked in CI.
 |---|---|---|
 | Constant-infusion → steady-state exposure-safety bound (ℝ, Mathlib) | [`lean/BioPKPD/ConstantInfusion.lean`](lean/BioPKPD/ConstantInfusion.lean) | written; kernel-checked in CI |
 | Repeated-dose steady-state therapeutic window (ℝ, Mathlib) | [`lean/BioPKPD/RepeatedDose.lean`](lean/BioPKPD/RepeatedDose.lean) | written; kernel-checked in CI |
-| `axm certify` — recognizer + fail-closed certificate emitter | [`axm/certify.py`](axm/certify.py) | working; tested in CI |
+| Repeated-dose window, *rational* corner conditions (auto-emittable) | [`lean/BioPKPD/RepeatedDoseRational.lean`](lean/BioPKPD/RepeatedDoseRational.lean) | written; kernel-checked in CI |
+| `axm certify` — recognizer + fail-closed certificate emitter (both schemas) | [`axm/certify.py`](axm/certify.py) | working; tested in CI |
 | `axm report` — MIDD-style certificate report | [`axm/report.py`](axm/report.py) | working; tested in CI |
-| Emitted certificate instance (kernel-checked end-to-end) | [`lean/BioPKPD/CertExample.lean`](lean/BioPKPD/CertExample.lean) | generated; kernel-checked in CI |
-| Worked MIDD report artifact | [`examples/drugX_infusion.report.md`](examples/drugX_infusion.report.md) | generated; synced in CI |
+| Emitted certificate instances (kernel-checked end-to-end) | [`CertExample.lean`](lean/BioPKPD/CertExample.lean), [`CertExampleRepeated.lean`](lean/BioPKPD/CertExampleRepeated.lean) | generated; kernel-checked in CI |
+| Worked MIDD report artifacts | [`drugX_infusion`](examples/drugX_infusion.report.md), [`drugY_repeated`](examples/drugY_repeated.report.md) | generated; synced in CI |
 | Mathlib-in-CI kernel check | [`.github/workflows/lean.yml`](.github/workflows/lean.yml) | runs on every push to `lean/**` |
 | `axm certify` test suite | [`.github/workflows/python.yml`](.github/workflows/python.yml) | runs on every push to `axm/**` |
 | Project handoff (lineage, discipline, roadmap) | [`docs/HANDOFF.md`](docs/HANDOFF.md) | reference |
@@ -82,10 +83,11 @@ If the answer is no, that is the most valuable finding available — and the sig
    classifies a one-compartment, first-order, constant-infusion model with parameter
    intervals + threshold, computes the worst-case-corner condition as an exact rational,
    emits a `norm_num`-closed Lean instance of the proved schema, and **fails closed** on
-   everything else (multi-compartment, nonlinear elimination, non-positive bounds, and the
-   *proved-but-transcendental* repeated-dose schema) with a precise reason and no Lean. The
-   emitted artifact is itself kernel-checked in CI, and a test asserts the emitter reproduces
-   it byte-for-byte. Try: `python -m axm certify examples/drugX_infusion.json`.
+   everything else (multi-compartment, nonlinear elimination, non-positive bounds, certificate
+   violations) with a precise reason and no Lean. The emitted artifact is itself kernel-checked
+   in CI, and a test asserts the emitter reproduces it byte-for-byte. Both the constant-infusion
+   and repeated-dose schemas are auto-emittable. Try: `python -m axm certify
+   examples/drugX_infusion.json` or `examples/drugY_repeated.json`.
 3. ~~**A MIDD-style report artifact**~~ — *done* ([`axm/report.py`](axm/report.py),
    [`examples/drugX_infusion.report.md`](examples/drugX_infusion.report.md)): theorem statement,
    assumptions, parameter provenance (which fit, which dataset, which method, which CI), proof
@@ -95,9 +97,10 @@ If the answer is no, that is the most valuable finding available — and the sig
    hash equals `sha256` of the kernel-checked artifact. Try: `python -m axm report
    examples/drugX_infusion.json`.
 
-With §5 steps 0–3 done, the build side of the vertical is complete; what remains is **breadth**
-(more model classes into the certified subset — e.g. the transcendental repeated-dose certificate
-via rational `exp` enclosures) and the open **adoption** question below.
+With §5 steps 0–3 done — and the repeated-dose schema since folded into the auto-emittable subset
+via rational `exp` enclosures ([`RepeatedDoseRational.lean`](lean/BioPKPD/RepeatedDoseRational.lean),
+`1 + x ≤ exp x`) — the build side of the vertical is complete. What remains is further **breadth**
+(more model classes) and the open **adoption** question below.
 
 ## Building locally
 
