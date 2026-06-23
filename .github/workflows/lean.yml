@@ -1,0 +1,37 @@
+name: lean-pkpd-flagship
+
+# Kernel-checks the PK/PD exposure-safety flagship proof (lean/) against Mathlib.
+# GitHub-hosted runners have open network, so Mathlib's prebuilt .olean cache
+# resolves here even though it is firewalled in the restricted dev sandbox.
+
+on:
+  push:
+    paths:
+      - "lean/**"
+      - ".github/workflows/lean.yml"
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install elan (Lean toolchain manager)
+        run: |
+          curl -fsSL https://elan.lean-lang.org/elan-init.sh | sh -s -- -y --default-toolchain none
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+
+      - name: Resolve deps, fetch Mathlib cache, build (kernel-checks the proof)
+        working-directory: lean
+        run: |
+          lake update
+          lake exe cache get
+          lake build
+
+      - name: Confirm the proof object was produced and is sorry-free
+        working-directory: lean
+        run: |
+          test -f .lake/build/lib/lean/BioPKPD/ConstantInfusion.olean
+          ! grep -RnE '\b(sorry|admit)\b' BioPKPD/ BioPKPD.lean || (echo "found sorry/admit" && exit 1)
+          echo "kernel-checked: Bio.PKPD.ConstantInfusion.infusion_safety_bound"
