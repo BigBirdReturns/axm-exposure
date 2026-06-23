@@ -150,15 +150,15 @@ theorem repeated_dose_window
   have htrough : Ceff ≤ ctrough D V ke τ := by
     simp only [ctrough]
     rw [le_div_iff₀ hden_max]
-    rcases le_or_lt 0 Ceff with hCeff | hCeff
+    rcases le_total 0 Ceff with hCeff | hCeff
     · -- `Ceff ≥ 0`: scale the monotone denominator, then chain to the worst corner.
       have h1 : Ceff * (V * (1 - Real.exp (-(ke * τ))))
           ≤ Ceff * (V_hi * (1 - Real.exp (-(ke_hi * τ)))) :=
         mul_le_mul_of_nonneg_left hmono_eff_den hCeff
       linarith [hcert_eff', hnum_eff, h1]
-    · -- `Ceff < 0`: the floor is below zero while the trough is strictly positive.
-      have hneg : 0 < -Ceff := neg_pos.mpr hCeff
-      nlinarith [mul_pos hneg hden_max, mul_pos hD he_pos]
+    · -- `Ceff ≤ 0`: the floor is `≤ 0` while the trough is strictly positive.
+      have hnp : 0 ≤ -Ceff := neg_nonneg.mpr hCeff
+      nlinarith [mul_nonneg hnp hden_max.le, mul_pos hD he_pos]
   exact ⟨htrough, hmax⟩
 
 end Bio.PKPD.RepeatedDose
