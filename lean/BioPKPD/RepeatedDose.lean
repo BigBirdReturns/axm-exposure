@@ -92,7 +92,6 @@ theorem repeated_dose_window
     Ceff ≤ ctrough D V ke τ ∧ cmax D V ke τ ≤ Ctox := by
   -- Positivity of the three exponential decay factors.
   have he_pos : 0 < Real.exp (-(ke * τ)) := Real.exp_pos _
-  have he_hi_pos : 0 < Real.exp (-(ke_hi * τ)) := Real.exp_pos _
   -- Volumes are positive throughout the box.
   have hV0 : 0 < V := lt_of_lt_of_le hV_lo hV1
   have hVhi0 : 0 < V_hi := lt_of_lt_of_le hV0 hV2
@@ -127,19 +126,39 @@ theorem repeated_dose_window
   -- Trough numerator is monotone in `ke` as well.
   have hnum_eff : D * Real.exp (-(ke_hi * τ)) ≤ D * Real.exp (-(ke * τ)) :=
     mul_le_mul_of_nonneg_left hehi_le_e hD.le
+  -- Clear the certificate denominators once (the fitted thresholds in product form).
+  have hcert_tox' : D ≤ Ctox * (V_lo * (1 - Real.exp (-(ke_lo * τ)))) := by
+    have h := hcert_tox
+    simp only [cmax] at h
+    rwa [div_le_iff₀ hden_maxlo] at h
+  have hcert_eff' :
+      Ceff * (V_hi * (1 - Real.exp (-(ke_hi * τ)))) ≤ D * Real.exp (-(ke_hi * τ)) := by
+    have h := hcert_eff
+    simp only [ctrough] at h
+    rwa [le_div_iff₀ hden_eff] at h
+  -- The toxicity threshold is non-negative (its product bound exceeds `D > 0`).
+  have hCtox_nn : 0 ≤ Ctox := by nlinarith [hcert_tox', hden_maxlo, hD]
   -- Toxicity ceiling: peak at `(ke, V)` is `≤` peak at the worst corner `≤ Ctox`.
   have hmax : cmax D V ke τ ≤ Ctox := by
-    refine le_trans ?_ hcert_tox
     simp only [cmax]
-    rw [div_le_div_iff hden_max hden_maxlo]
-    nlinarith [mul_le_mul_of_nonneg_left hmono_max hD.le]
+    rw [div_le_iff₀ hden_max]
+    have hstep : Ctox * (V_lo * (1 - Real.exp (-(ke_lo * τ))))
+        ≤ Ctox * (V * (1 - Real.exp (-(ke * τ)))) :=
+      mul_le_mul_of_nonneg_left hmono_max hCtox_nn
+    linarith [hcert_tox', hstep]
   -- Efficacy floor: trough at `(ke, V)` is `≥` trough at the worst corner `≥ Ceff`.
   have htrough : Ceff ≤ ctrough D V ke τ := by
-    refine le_trans hcert_eff ?_
     simp only [ctrough]
-    rw [div_le_div_iff hden_eff hden_max]
-    nlinarith [mul_le_mul hnum_eff hmono_eff_den
-      (mul_nonneg hV0.le ha_pos.le) (mul_nonneg hD.le he_pos.le)]
+    rw [le_div_iff₀ hden_max]
+    rcases le_or_lt 0 Ceff with hCeff | hCeff
+    · -- `Ceff ≥ 0`: scale the monotone denominator, then chain to the worst corner.
+      have h1 : Ceff * (V * (1 - Real.exp (-(ke * τ))))
+          ≤ Ceff * (V_hi * (1 - Real.exp (-(ke_hi * τ)))) :=
+        mul_le_mul_of_nonneg_left hmono_eff_den hCeff
+      linarith [hcert_eff', hnum_eff, h1]
+    · -- `Ceff < 0`: the floor is below zero while the trough is strictly positive.
+      have hneg : 0 < -Ceff := neg_pos.mpr hCeff
+      nlinarith [mul_pos hneg hden_max, mul_pos hD he_pos]
   exact ⟨htrough, hmax⟩
 
 end Bio.PKPD.RepeatedDose

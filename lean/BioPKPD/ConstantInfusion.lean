@@ -100,8 +100,8 @@ theorem infusion_safety_bound
   -- Upper bound, step 2: the steady-state value is `≤ T`, via the certificate
   -- condition at the worst-case corner.
   have hSsT : R / (ke * V) ≤ T := by
-    rw [div_le_iff hD]
-    have hcert' : R ≤ T * (ke_lo * V_lo) := (div_le_iff hD0).mp hcert
+    rw [div_le_iff₀ hD]
+    have hcert' : R ≤ T * (ke_lo * V_lo) := (div_le_iff₀ hD0).mp hcert
     have hTpos : 0 < T := lt_of_lt_of_le (div_pos hR hD0) hcert
     linarith [mul_le_mul_of_nonneg_left hden hTpos.le]
   exact ⟨hlow, le_trans hCss hSsT⟩
