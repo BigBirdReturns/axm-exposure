@@ -26,7 +26,10 @@ built as a Mathlib flagship and kernel-checked in CI.
 |---|---|---|
 | Constant-infusion → steady-state exposure-safety bound (ℝ, Mathlib) | [`lean/BioPKPD/ConstantInfusion.lean`](lean/BioPKPD/ConstantInfusion.lean) | written; kernel-checked in CI |
 | Repeated-dose steady-state therapeutic window (ℝ, Mathlib) | [`lean/BioPKPD/RepeatedDose.lean`](lean/BioPKPD/RepeatedDose.lean) | written; kernel-checked in CI |
+| `axm certify` — recognizer + fail-closed certificate emitter | [`axm/certify.py`](axm/certify.py) | working; tested in CI |
+| Emitted certificate instance (kernel-checked end-to-end) | [`lean/BioPKPD/CertExample.lean`](lean/BioPKPD/CertExample.lean) | generated; kernel-checked in CI |
 | Mathlib-in-CI kernel check | [`.github/workflows/lean.yml`](.github/workflows/lean.yml) | runs on every push to `lean/**` |
+| `axm certify` test suite | [`.github/workflows/python.yml`](.github/workflows/python.yml) | runs on every push to `axm/**` |
 | Project handoff (lineage, discipline, roadmap) | [`docs/HANDOFF.md`](docs/HANDOFF.md) | reference |
 
 ### The theorem
@@ -73,9 +76,14 @@ If the answer is no, that is the most valuable finding available — and the sig
 1. ~~**Repeated-dose accumulation / therapeutic window**~~ — *done* ([`RepeatedDose.lean`](lean/BioPKPD/RepeatedDose.lean)):
    proves `C_trough ≥ C_eff ∧ C_max ≤ C_tox` at steady state for **all** params in the fitted
    box `[ke_lo, ke_hi] × [V_lo, V_hi]`, with each bound certified at its worst-case corner.
-2. **A recognizer + certificate report** — classify a one-compartment, first-order,
-   constant-input model with parameter intervals + threshold, emit the Lean instance, **fail
-   closed** on anything outside the subset (mirroring `bsl certify`).
+2. ~~**A recognizer + certificate report**~~ — *done* ([`axm/certify.py`](axm/certify.py)):
+   classifies a one-compartment, first-order, constant-infusion model with parameter
+   intervals + threshold, computes the worst-case-corner condition as an exact rational,
+   emits a `norm_num`-closed Lean instance of the proved schema, and **fails closed** on
+   everything else (multi-compartment, nonlinear elimination, non-positive bounds, and the
+   *proved-but-transcendental* repeated-dose schema) with a precise reason and no Lean. The
+   emitted artifact is itself kernel-checked in CI, and a test asserts the emitter reproduces
+   it byte-for-byte. Try: `python -m axm certify examples/drugX_infusion.json`.
 3. **A MIDD-style report artifact** — theorem statement, assumptions, parameter provenance
    (which fit, which dataset, which method, which CI), proof hash, model-risk note.
 

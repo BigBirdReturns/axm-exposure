@@ -1,0 +1,32 @@
+name: axm-certify-tests
+
+# Tests the recognizer + fail-closed certificate emitter (`axm certify`).
+# Pure Python, no Lean toolchain — fast. The emitted Lean is kernel-checked
+# separately by the lean-pkpd-flagship workflow.
+
+on:
+  push:
+    paths:
+      - "axm/**"
+      - "tests/**"
+      - "examples/**"
+      - ".github/workflows/python.yml"
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install pytest
+        run: python -m pip install --quiet pytest
+      - name: Run tests (incl. emitter == committed-artifact byte check)
+        run: python -m pytest tests/ -q
+      - name: Re-emit example and confirm it matches the committed certificate
+        run: |
+          python -m axm certify examples/drugX_infusion.json --lean-only > /tmp/regen.lean
+          diff -u lean/BioPKPD/CertExample.lean /tmp/regen.lean
+          echo "axm certify emits exactly the kernel-checked artifact"
