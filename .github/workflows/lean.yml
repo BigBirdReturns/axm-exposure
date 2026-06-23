@@ -33,5 +33,7 @@ jobs:
         working-directory: lean
         run: |
           test -f .lake/build/lib/lean/BioPKPD/ConstantInfusion.olean
+          test -f .lake/build/lib/lean/BioPKPD/RepeatedDose.olean
           ! grep -RnE '\b(sorry|admit)\b' BioPKPD/ BioPKPD.lean || (echo "found sorry/admit" && exit 1)
           echo "kernel-checked: Bio.PKPD.ConstantInfusion.infusion_safety_bound"
+          echo "kernel-checked: Bio.PKPD.RepeatedDose.repeated_dose_window"

@@ -25,6 +25,7 @@ built as a Mathlib flagship and kernel-checked in CI.
 | Piece | Where | Status |
 |---|---|---|
 | Constant-infusion → steady-state exposure-safety bound (ℝ, Mathlib) | [`lean/BioPKPD/ConstantInfusion.lean`](lean/BioPKPD/ConstantInfusion.lean) | written; kernel-checked in CI |
+| Repeated-dose steady-state therapeutic window (ℝ, Mathlib) | [`lean/BioPKPD/RepeatedDose.lean`](lean/BioPKPD/RepeatedDose.lean) | written; kernel-checked in CI |
 | Mathlib-in-CI kernel check | [`.github/workflows/lean.yml`](.github/workflows/lean.yml) | runs on every push to `lean/**` |
 | Project handoff (lineage, discipline, roadmap) | [`docs/HANDOFF.md`](docs/HANDOFF.md) | reference |
 
@@ -69,8 +70,9 @@ If the answer is no, that is the most valuable finding available — and the sig
 
 ## Next (handoff §5, in order)
 
-1. **Repeated-dose accumulation / therapeutic window** — prove `C_trough ≥ C_eff ∧ C_max ≤
-   C_tox` at steady state for all params in the CI.
+1. ~~**Repeated-dose accumulation / therapeutic window**~~ — *done* ([`RepeatedDose.lean`](lean/BioPKPD/RepeatedDose.lean)):
+   proves `C_trough ≥ C_eff ∧ C_max ≤ C_tox` at steady state for **all** params in the fitted
+   box `[ke_lo, ke_hi] × [V_lo, V_hi]`, with each bound certified at its worst-case corner.
 2. **A recognizer + certificate report** — classify a one-compartment, first-order,
    constant-input model with parameter intervals + threshold, emit the Lean instance, **fail
    closed** on anything outside the subset (mirroring `bsl certify`).
