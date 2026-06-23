@@ -30,3 +30,13 @@ jobs:
           python -m axm certify examples/drugX_infusion.json --lean-only > /tmp/regen.lean
           diff -u lean/BioPKPD/CertExample.lean /tmp/regen.lean
           echo "axm certify emits exactly the kernel-checked artifact"
+      - name: Re-render report and confirm it matches the committed report
+        run: |
+          python -m axm report examples/drugX_infusion.json > /tmp/regen.md
+          diff -u examples/drugX_infusion.report.md /tmp/regen.md
+          echo "axm report renders exactly the committed MIDD report"
+      - name: Confirm the report's proof-identity hash matches the artifact
+        run: |
+          want=$(sha256sum lean/BioPKPD/CertExample.lean | cut -d' ' -f1)
+          grep -q "$want" examples/drugX_infusion.report.md
+          echo "report proof-identity hash == sha256(emitted artifact): $want"

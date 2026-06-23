@@ -27,7 +27,9 @@ built as a Mathlib flagship and kernel-checked in CI.
 | Constant-infusion → steady-state exposure-safety bound (ℝ, Mathlib) | [`lean/BioPKPD/ConstantInfusion.lean`](lean/BioPKPD/ConstantInfusion.lean) | written; kernel-checked in CI |
 | Repeated-dose steady-state therapeutic window (ℝ, Mathlib) | [`lean/BioPKPD/RepeatedDose.lean`](lean/BioPKPD/RepeatedDose.lean) | written; kernel-checked in CI |
 | `axm certify` — recognizer + fail-closed certificate emitter | [`axm/certify.py`](axm/certify.py) | working; tested in CI |
+| `axm report` — MIDD-style certificate report | [`axm/report.py`](axm/report.py) | working; tested in CI |
 | Emitted certificate instance (kernel-checked end-to-end) | [`lean/BioPKPD/CertExample.lean`](lean/BioPKPD/CertExample.lean) | generated; kernel-checked in CI |
+| Worked MIDD report artifact | [`examples/drugX_infusion.report.md`](examples/drugX_infusion.report.md) | generated; synced in CI |
 | Mathlib-in-CI kernel check | [`.github/workflows/lean.yml`](.github/workflows/lean.yml) | runs on every push to `lean/**` |
 | `axm certify` test suite | [`.github/workflows/python.yml`](.github/workflows/python.yml) | runs on every push to `axm/**` |
 | Project handoff (lineage, discipline, roadmap) | [`docs/HANDOFF.md`](docs/HANDOFF.md) | reference |
@@ -84,8 +86,18 @@ If the answer is no, that is the most valuable finding available — and the sig
    *proved-but-transcendental* repeated-dose schema) with a precise reason and no Lean. The
    emitted artifact is itself kernel-checked in CI, and a test asserts the emitter reproduces
    it byte-for-byte. Try: `python -m axm certify examples/drugX_infusion.json`.
-3. **A MIDD-style report artifact** — theorem statement, assumptions, parameter provenance
-   (which fit, which dataset, which method, which CI), proof hash, model-risk note.
+3. ~~**A MIDD-style report artifact**~~ — *done* ([`axm/report.py`](axm/report.py),
+   [`examples/drugX_infusion.report.md`](examples/drugX_infusion.report.md)): theorem statement,
+   assumptions, parameter provenance (which fit, which dataset, which method, which CI), proof
+   identity (SHA-256 of the emitted artifact + the schema + the exact toolchain it's
+   kernel-checked under), and a model-risk note. The hash is content identity, not a kernel
+   attestation — the attestation is the green CI run; CI re-renders the report and checks the
+   hash equals `sha256` of the kernel-checked artifact. Try: `python -m axm report
+   examples/drugX_infusion.json`.
+
+With §5 steps 0–3 done, the build side of the vertical is complete; what remains is **breadth**
+(more model classes into the certified subset — e.g. the transcendental repeated-dose certificate
+via rational `exp` enclosures) and the open **adoption** question below.
 
 ## Building locally
 

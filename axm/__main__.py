@@ -13,6 +13,7 @@ import json
 import sys
 
 from .certify import SpecError, certify
+from .report import report as render_report
 
 _EXIT = {"certified": 0, "failed": 2, "refused": 3}
 
@@ -25,6 +26,9 @@ def main(argv: list[str] | None = None) -> int:
     c.add_argument("-o", "--out", help="write emitted Lean here (else stdout)")
     c.add_argument("--lean-only", action="store_true",
                    help="on success print only the Lean, nothing else")
+    r = sub.add_parser("report", help="render a MIDD certificate report (Markdown)")
+    r.add_argument("spec", help="path to a JSON model spec, or '-' for stdin")
+    r.add_argument("-o", "--out", help="write the report here (else stdout)")
     args = p.parse_args(argv)
 
     raw = sys.stdin.read() if args.spec == "-" else open(args.spec).read()
@@ -37,6 +41,16 @@ def main(argv: list[str] | None = None) -> int:
     except json.JSONDecodeError as e:
         print(f"malformed spec: not valid JSON: {e}", file=sys.stderr)
         return 4
+
+    if args.cmd == "report":
+        md = render_report(spec, outcome)
+        if args.out:
+            with open(args.out, "w") as f:
+                f.write(md)
+            print(f"wrote MIDD report to {args.out}", file=sys.stderr)
+        else:
+            sys.stdout.write(md)
+        return _EXIT[outcome.status]
 
     if outcome.ok and args.lean_only:
         sys.stdout.write(outcome.lean or "")
