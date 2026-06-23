@@ -37,7 +37,7 @@ private lemma one_sub_exp_neg_lower (x : ℝ) (hx : 0 < x) :
   have hbound : Real.exp (-x) ≤ 1 / (1 + x) := by
     rw [Real.exp_neg, inv_eq_one_div]
     exact one_div_le_one_div_of_le h1x hexp
-  have heq : 1 - 1 / (1 + x) = x / (1 + x) := by field_simp
+  have heq : 1 - 1 / (1 + x) = x / (1 + x) := by field_simp; ring
   linarith [hbound, heq]
 
 /-- `1 - x ≤ exp(-x)`, from `1 + (-x) ≤ exp(-x)`. -/
