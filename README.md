@@ -1,7 +1,7 @@
 # axm-exposure — PK/PD exposure-safety certificates
 
-[![lean CI](https://github.com/BigBirdReturns/axm-exposure/actions/workflows/lean.yml/badge.svg?branch=claude/amazing-ptolemy-8tzwf8)](https://github.com/BigBirdReturns/axm-exposure/actions/workflows/lean.yml)
-[![python CI](https://github.com/BigBirdReturns/axm-exposure/actions/workflows/python.yml/badge.svg?branch=claude/amazing-ptolemy-8tzwf8)](https://github.com/BigBirdReturns/axm-exposure/actions/workflows/python.yml)
+[![lean CI](https://github.com/BigBirdReturns/axm-exposure/actions/workflows/lean.yml/badge.svg)](https://github.com/BigBirdReturns/axm-exposure/actions/workflows/lean.yml)
+[![python CI](https://github.com/BigBirdReturns/axm-exposure/actions/workflows/python.yml/badge.svg)](https://github.com/BigBirdReturns/axm-exposure/actions/workflows/python.yml)
 
 A narrow, additive vertical spun out of [`GSK-LeanBio`](docs/HANDOFF.md): **machine-checked,
 parameter-bounded exposure-safety certificates for Model-Informed Drug Development (MIDD).**
