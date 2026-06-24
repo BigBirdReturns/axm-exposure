@@ -44,6 +44,7 @@ jobs:
           echo "kernel-checked: Bio.PKPD.RepeatedDose.repeated_dose_window"
           echo "kernel-checked: Bio.PKPD.RepeatedDose.repeated_dose_window_rational"
           echo "kernel-checked: Bio.PKPD.TwoCompartmentInfusion.central_steady_state_bound"
+          echo "kernel-checked: Bio.PKPD.TwoCompartmentInfusion.central_transient_bound"
           echo "kernel-checked: axm-certify emitted instance cert_drugX_infusion"
           echo "kernel-checked: axm-certify emitted instance cert_drugY_repeated"
           echo "kernel-checked: axm-certify emitted instance cert_drugW_two_compartment"
