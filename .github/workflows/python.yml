@@ -35,17 +35,23 @@ jobs:
           python -m axm certify examples/drugY_repeated.json --lean-only > /tmp/regen_r.lean
           diff -u lean/BioPKPD/CertExampleRepeated.lean /tmp/regen_r.lean
           echo "axm certify emits exactly the kernel-checked repeated-dose artifact"
+      - name: Re-emit two-compartment example and confirm it matches the committed cert
+        run: |
+          python -m axm certify examples/drugW_two_compartment.json --lean-only > /tmp/regen_2c.lean
+          diff -u lean/BioPKPD/CertExampleTwoCompartment.lean /tmp/regen_2c.lean
+          echo "axm certify emits exactly the kernel-checked two-compartment artifact"
       - name: Re-render reports and confirm they match the committed reports
         run: |
-          python -m axm report examples/drugX_infusion.json > /tmp/regen.md
-          diff -u examples/drugX_infusion.report.md /tmp/regen.md
-          python -m axm report examples/drugY_repeated.json > /tmp/regen_r.md
-          diff -u examples/drugY_repeated.report.md /tmp/regen_r.md
+          for s in drugX_infusion drugY_repeated drugW_two_compartment; do
+            python -m axm report "examples/$s.json" > "/tmp/$s.md"
+            diff -u "examples/$s.report.md" "/tmp/$s.md"
+          done
           echo "axm report renders exactly the committed MIDD reports"
       - name: Confirm each report's proof-identity hash matches its artifact
         run: |
           for pair in "lean/BioPKPD/CertExample.lean:examples/drugX_infusion.report.md" \
-                      "lean/BioPKPD/CertExampleRepeated.lean:examples/drugY_repeated.report.md"; do
+                      "lean/BioPKPD/CertExampleRepeated.lean:examples/drugY_repeated.report.md" \
+                      "lean/BioPKPD/CertExampleTwoCompartment.lean:examples/drugW_two_compartment.report.md"; do
             art="${pair%%:*}"; rep="${pair##*:}"
             want=$(sha256sum "$art" | cut -d' ' -f1)
             grep -q "$want" "$rep"
@@ -55,14 +61,15 @@ jobs:
         run: |
           python -m axm report examples/failed_infusion.json > /tmp/f.md || true
           diff -u examples/failed_infusion.report.md /tmp/f.md
-          python -m axm report examples/refused_two_compartment.json > /tmp/r.md || true
-          diff -u examples/refused_two_compartment.report.md /tmp/r.md
+          python -m axm report examples/refused_three_compartment.json > /tmp/r.md || true
+          diff -u examples/refused_three_compartment.report.md /tmp/r.md
           echo "fail-closed reports render exactly the committed artifacts"
       - name: Confirm the fail-closed exit-code contract
         run: |
           set +e
-          python -m axm certify examples/drugX_infusion.json          >/dev/null 2>&1; test $? -eq 0
-          python -m axm certify examples/drugY_repeated.json          >/dev/null 2>&1; test $? -eq 0
-          python -m axm certify examples/failed_infusion.json         >/dev/null 2>&1; test $? -eq 2
-          python -m axm certify examples/refused_two_compartment.json >/dev/null 2>&1; test $? -eq 3
+          python -m axm certify examples/drugX_infusion.json            >/dev/null 2>&1; test $? -eq 0
+          python -m axm certify examples/drugY_repeated.json            >/dev/null 2>&1; test $? -eq 0
+          python -m axm certify examples/drugW_two_compartment.json     >/dev/null 2>&1; test $? -eq 0
+          python -m axm certify examples/failed_infusion.json           >/dev/null 2>&1; test $? -eq 2
+          python -m axm certify examples/refused_three_compartment.json >/dev/null 2>&1; test $? -eq 3
           echo "exit codes: 0 certified, 2 failed (in-subset finding), 3 refused (out of subset)"

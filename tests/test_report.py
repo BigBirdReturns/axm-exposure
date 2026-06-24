@@ -109,7 +109,7 @@ def test_repeated_report_names_its_schema_and_hash():
 
 # --- committed fail-closed example reports stay in sync -------------------
 
-@pytest.mark.parametrize("stem", ["failed_infusion", "refused_two_compartment"])
+@pytest.mark.parametrize("stem", ["failed_infusion", "refused_three_compartment"])
 def test_failclosed_reports_in_sync(stem):
     spec = json.loads((REPO / "examples" / f"{stem}.json").read_text())
     out = certify(spec)

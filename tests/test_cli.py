@@ -18,7 +18,8 @@ def _certify(spec: str) -> int:
 
 
 def test_exit_codes_are_fail_closed():
-    assert _certify("drugX_infusion.json") == 0          # certified
-    assert _certify("drugY_repeated.json") == 0          # certified
-    assert _certify("failed_infusion.json") == 2         # in-subset finding
-    assert _certify("refused_two_compartment.json") == 3 # out of subset
+    assert _certify("drugX_infusion.json") == 0            # certified (1-cpt infusion)
+    assert _certify("drugY_repeated.json") == 0            # certified (repeated dose)
+    assert _certify("drugW_two_compartment.json") == 0     # certified (2-cpt infusion)
+    assert _certify("failed_infusion.json") == 2           # in-subset finding
+    assert _certify("refused_three_compartment.json") == 3 # out of subset

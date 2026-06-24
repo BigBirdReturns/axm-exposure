@@ -35,11 +35,15 @@ jobs:
           test -f .lake/build/lib/lean/BioPKPD/ConstantInfusion.olean
           test -f .lake/build/lib/lean/BioPKPD/RepeatedDose.olean
           test -f .lake/build/lib/lean/BioPKPD/RepeatedDoseRational.olean
+          test -f .lake/build/lib/lean/BioPKPD/TwoCompartmentInfusion.olean
           test -f .lake/build/lib/lean/BioPKPD/CertExample.olean
           test -f .lake/build/lib/lean/BioPKPD/CertExampleRepeated.olean
+          test -f .lake/build/lib/lean/BioPKPD/CertExampleTwoCompartment.olean
           ! grep -RnE '\b(sorry|admit)\b' BioPKPD/ BioPKPD.lean || (echo "found sorry/admit" && exit 1)
           echo "kernel-checked: Bio.PKPD.ConstantInfusion.infusion_safety_bound"
           echo "kernel-checked: Bio.PKPD.RepeatedDose.repeated_dose_window"
           echo "kernel-checked: Bio.PKPD.RepeatedDose.repeated_dose_window_rational"
+          echo "kernel-checked: Bio.PKPD.TwoCompartmentInfusion.central_steady_state_bound"
           echo "kernel-checked: axm-certify emitted instance cert_drugX_infusion"
           echo "kernel-checked: axm-certify emitted instance cert_drugY_repeated"
+          echo "kernel-checked: axm-certify emitted instance cert_drugW_two_compartment"

@@ -40,6 +40,10 @@ _SCHEMA_INFO = {
         "Bio.PKPD.RepeatedDose.repeated_dose_window_rational",
         "lean/BioPKPD/RepeatedDoseRational.lean",
     ),
+    "two_compartment_ss": (
+        "Bio.PKPD.TwoCompartmentInfusion.central_steady_state_bound",
+        "lean/BioPKPD/TwoCompartmentInfusion.lean",
+    ),
 }
 
 
@@ -164,6 +168,33 @@ def report(spec: dict, outcome: Outcome) -> str:
                      f"{d['tox_ceiling']} ≤ Ctox = {d['Ctox']}` ✓")
         lines.append(f"  - trough floor `Ceff = {d['Ceff']} ≤ "
                      f"D·(1−ke_hi·τ)/(V_hi·ke_hi·τ) = {d['eff_floor']}` ✓")
+    elif schema == "two_compartment_ss":
+        lines.append("For a two-compartment constant continuous IV infusion model "
+                     "(central volume `V1`, peripheral compartment, any "
+                     "`k12, k21 > 0`), at steady state the peripheral flux "
+                     "cancels and the central concentration is")
+        lines.append("")
+        lines.append("```")
+        lines.append("C1_ss = A1 / V1 = R / (ke · V1),")
+        lines.append("```")
+        lines.append("")
+        lines.append(f"so the steady-state central exposure stays in "
+                     f"`[0, {d['threshold']}]` for **every** parameter value with "
+                     f"`ke_lo ≤ ke` and `V1_lo ≤ V1` — the peripheral compartment "
+                     f"does not raise the steady-state ceiling. (Steady state "
+                     f"only; the no-overshoot transient is argued on paper.)")
+        lines.append("")
+        lines.append("## Assumptions")
+        lines.append("")
+        lines.append(f"- infusion rate `R = {d['R']}` (> 0)")
+        lines.append(f"- fitted lower bounds `ke_lo = {d['ke_lo']}` (> 0), "
+                     f"`V1_lo = {d['V1_lo']}` (> 0)")
+        lines.append(f"- steady-state balance: `k12·A1 = k21·A2` and "
+                     f"`R + k21·A2 = (ke+k12)·A1`")
+        lines.append(f"- toxicity threshold `T = {d['threshold']}`")
+        lines.append(f"- **certificate condition** (worst-case / smallest-clearance "
+                     f"corner): `R/(ke_lo·V1_lo) = {d['worst_case_exposure']} ≤ "
+                     f"{d['threshold']}` ✓")
     else:
         lines.append("For a one-compartment constant continuous IV infusion model")
         lines.append("")

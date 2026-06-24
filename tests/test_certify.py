@@ -49,11 +49,11 @@ def test_emitter_matches_committed_artifact():
 
 def test_refuses_multicompartment():
     s = _spec()
-    s["compartments"] = 2
+    s["compartments"] = 3  # 1 and 2 are certifiable; 3+ is out of subset
     out = certify(s)
     assert out.status == "refused"
     assert out.lean is None
-    assert "2-compartment" in out.reason
+    assert "3-compartment" in out.reason
 
 
 def test_refuses_nonlinear_elimination():
@@ -192,3 +192,52 @@ def test_repeated_requires_both_endpoints():
     s["parameters"]["ke"] = [0.08]  # point estimate -> lo == hi, allowed
     out = certify(s)
     assert out.ok  # ke_hi == ke_lo == 0.08, still valid
+
+
+# --- two-compartment schema -----------------------------------------------
+
+EXAMPLE_2C = REPO / "examples" / "drugW_two_compartment.json"
+COMMITTED_LEAN_2C = REPO / "lean" / "BioPKPD" / "CertExampleTwoCompartment.lean"
+
+
+def _spec_2c() -> dict:
+    return json.loads(EXAMPLE_2C.read_text())
+
+
+def test_two_compartment_certifies():
+    out = certify(_spec_2c())
+    assert out.ok
+    assert out.detail["schema"] == "two_compartment_ss"
+    # peripheral compartment cancels: same ceiling as 1-cpt, R/(ke_lo*V1_lo)=200/3
+    assert out.detail["worst_case_exposure"] == "200/3"
+    assert "central_steady_state_bound" in out.lean
+    assert "sorry" not in out.lean
+
+
+def test_two_compartment_emitter_matches_committed_artifact():
+    out = certify(_spec_2c())
+    assert out.lean == COMMITTED_LEAN_2C.read_text()
+
+
+def test_two_compartment_accepts_V_alias():
+    s = _spec_2c()
+    s["parameters"]["V"] = s["parameters"].pop("V1")  # central volume as "V"
+    out = certify(s)
+    assert out.ok
+
+
+def test_two_compartment_can_fail():
+    s = _spec_2c()
+    s["threshold"] = 10  # 200/3 ≈ 66.7 > 10
+    out = certify(s)
+    assert out.status == "failed"
+    assert out.lean is None
+
+
+def test_two_compartment_non_infusion_refused():
+    s = _spec_2c()
+    s["input"] = "repeated_bolus"
+    out = certify(s)
+    assert out.status == "refused"
+    assert out.lean is None
+    assert "two-compartment" in out.reason

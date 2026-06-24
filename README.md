@@ -25,24 +25,26 @@ No Lean toolchain needed to *try* it; you need it only to re-check the proofs yo
 # 1. A certifiable constant-infusion model -> emits kernel-checkable Lean (exit 0)
 python -m axm certify examples/drugX_infusion.json
 
-# 2. A repeated-dose regimen -> the other schema, also certified (exit 0)
+# 2. A repeated-dose regimen, and a two-compartment infusion -> also certified (exit 0)
 python -m axm certify examples/drugY_repeated.json
+python -m axm certify examples/drugW_two_compartment.json
 
 # 3. Fail-closed: a model whose exposure can exceed the threshold (exit 2, no Lean)
 python -m axm certify examples/failed_infusion.json
 
 # 4. Fail-closed: a model outside the certified subset (exit 3, no Lean)
-python -m axm certify examples/refused_two_compartment.json
+python -m axm certify examples/refused_three_compartment.json
 
 # A full MIDD report for any of them (theorem, assumptions, provenance, proof hash):
 python -m axm report examples/drugX_infusion.json
 ```
 
-Pre-rendered reports for all four outcomes are committed so you can read them without running
-anything: [`drugX_infusion`](examples/drugX_infusion.report.md) (certified, infusion),
+Pre-rendered reports for all outcomes are committed so you can read them without running
+anything: [`drugX_infusion`](examples/drugX_infusion.report.md) (certified, 1-cpt infusion),
 [`drugY_repeated`](examples/drugY_repeated.report.md) (certified, repeated dose),
+[`drugW_two_compartment`](examples/drugW_two_compartment.report.md) (certified, 2-cpt infusion),
 [`failed_infusion`](examples/failed_infusion.report.md) (in-subset finding),
-[`refused_two_compartment`](examples/refused_two_compartment.report.md) (out of subset).
+[`refused_three_compartment`](examples/refused_three_compartment.report.md) (out of subset).
 
 ### How to read a verdict
 
@@ -74,10 +76,11 @@ built as a Mathlib flagship and kernel-checked in CI.
 | Constant-infusion → steady-state exposure-safety bound (ℝ, Mathlib) | [`lean/BioPKPD/ConstantInfusion.lean`](lean/BioPKPD/ConstantInfusion.lean) | written; kernel-checked in CI |
 | Repeated-dose steady-state therapeutic window (ℝ, Mathlib) | [`lean/BioPKPD/RepeatedDose.lean`](lean/BioPKPD/RepeatedDose.lean) | written; kernel-checked in CI |
 | Repeated-dose window, *rational* corner conditions (auto-emittable) | [`lean/BioPKPD/RepeatedDoseRational.lean`](lean/BioPKPD/RepeatedDoseRational.lean) | written; kernel-checked in CI |
-| `axm certify` — recognizer + fail-closed certificate emitter (both schemas) | [`axm/certify.py`](axm/certify.py) | working; tested in CI |
+| Two-compartment infusion → steady-state central exposure bound (ℝ, Mathlib) | [`lean/BioPKPD/TwoCompartmentInfusion.lean`](lean/BioPKPD/TwoCompartmentInfusion.lean) | written; kernel-checked in CI |
+| `axm certify` — recognizer + fail-closed certificate emitter (three schemas) | [`axm/certify.py`](axm/certify.py) | working; tested in CI |
 | `axm report` — MIDD-style certificate report | [`axm/report.py`](axm/report.py) | working; tested in CI |
-| Emitted certificate instances (kernel-checked end-to-end) | [`CertExample.lean`](lean/BioPKPD/CertExample.lean), [`CertExampleRepeated.lean`](lean/BioPKPD/CertExampleRepeated.lean) | generated; kernel-checked in CI |
-| Worked MIDD report artifacts | [`drugX_infusion`](examples/drugX_infusion.report.md), [`drugY_repeated`](examples/drugY_repeated.report.md) | generated; synced in CI |
+| Emitted certificate instances (kernel-checked end-to-end) | [`CertExample.lean`](lean/BioPKPD/CertExample.lean), [`CertExampleRepeated.lean`](lean/BioPKPD/CertExampleRepeated.lean), [`CertExampleTwoCompartment.lean`](lean/BioPKPD/CertExampleTwoCompartment.lean) | generated; kernel-checked in CI |
+| Worked MIDD report artifacts | [`drugX_infusion`](examples/drugX_infusion.report.md), [`drugY_repeated`](examples/drugY_repeated.report.md), [`drugW_two_compartment`](examples/drugW_two_compartment.report.md) | generated; synced in CI |
 | Mathlib-in-CI kernel check | [`.github/workflows/lean.yml`](.github/workflows/lean.yml) | runs on every push to `lean/**` |
 | `axm certify` test suite | [`.github/workflows/python.yml`](.github/workflows/python.yml) | runs on every push to `axm/**` |
 | Project handoff (lineage, discipline, roadmap) | [`docs/HANDOFF.md`](docs/HANDOFF.md) | reference |
