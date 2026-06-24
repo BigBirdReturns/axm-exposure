@@ -10,6 +10,8 @@ on:
       - "axm/**"
       - "tests/**"
       - "examples/**"
+      - "tools/**"
+      - "docs/site_data.js"
       - ".github/workflows/python.yml"
   workflow_dispatch:
 
@@ -73,3 +75,7 @@ jobs:
           python -m axm certify examples/failed_infusion.json           >/dev/null 2>&1; test $? -eq 2
           python -m axm certify examples/refused_three_compartment.json >/dev/null 2>&1; test $? -eq 3
           echo "exit codes: 0 certified, 2 failed (in-subset finding), 3 refused (out of subset)"
+      - name: Confirm the browser-demo bundle matches the package source
+        run: |
+          python tools/build_site.py --check
+          echo "docs/site_data.js is byte-identical to the tested package + examples"

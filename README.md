@@ -1,7 +1,15 @@
 # axm-exposure — PK/PD exposure-safety certificates
 
+[![lean CI](https://github.com/BigBirdReturns/axm-exposure/actions/workflows/lean.yml/badge.svg?branch=claude/amazing-ptolemy-8tzwf8)](https://github.com/BigBirdReturns/axm-exposure/actions/workflows/lean.yml)
+[![python CI](https://github.com/BigBirdReturns/axm-exposure/actions/workflows/python.yml/badge.svg?branch=claude/amazing-ptolemy-8tzwf8)](https://github.com/BigBirdReturns/axm-exposure/actions/workflows/python.yml)
+
 A narrow, additive vertical spun out of [`GSK-LeanBio`](docs/HANDOFF.md): **machine-checked,
 parameter-bounded exposure-safety certificates for Model-Informed Drug Development (MIDD).**
+
+> **▶ Live demo — run the real tool in your browser:** <https://bigbirdreturns.github.io/axm-exposure/>
+> Pick a model spec, hit *Certify*, and watch it emit kernel-checkable Lean (or fail closed).
+> The package runs client-side via Pyodide — byte-identical to the CI-tested source (the demo
+> bundle is diffed against the tree in CI). Enable it once at **Settings → Pages → Source = GitHub Actions**.
 
 `GSK-LeanBio` demonstrated that you *can* kernel-check biochemical-model properties, and in
 doing so exposed the ceiling: formal proof certifies a **model under stated assumptions**,
@@ -83,6 +91,7 @@ built as a Mathlib flagship and kernel-checked in CI.
 | Worked MIDD report artifacts | [`drugX_infusion`](examples/drugX_infusion.report.md), [`drugY_repeated`](examples/drugY_repeated.report.md), [`drugW_two_compartment`](examples/drugW_two_compartment.report.md) | generated; synced in CI |
 | Mathlib-in-CI kernel check | [`.github/workflows/lean.yml`](.github/workflows/lean.yml) | runs on every push to `lean/**` |
 | `axm certify` test suite | [`.github/workflows/python.yml`](.github/workflows/python.yml) | runs on every push to `axm/**` |
+| Browser demo — runs the real package in-browser (Pyodide) | [`docs/index.html`](docs/index.html), [`tools/build_site.py`](tools/build_site.py) | bundle diffed in CI; deployed via [`pages.yml`](.github/workflows/pages.yml) |
 | Project handoff (lineage, discipline, roadmap) | [`docs/HANDOFF.md`](docs/HANDOFF.md) | reference |
 
 ### The theorem
