@@ -87,7 +87,8 @@ def report(spec: dict, outcome: Outcome) -> str:
     lines.append(f"# Exposure-safety certificate report — `{name}`")
     lines.append("")
     lines.append(f"**Verdict:** `{status}`  ")
-    lines.append(f"**Model class:** {outcome.detail.get('subset', CERTIFIED_SUBSET)}")
+    lines.append(f"**Target certified class:** "
+                 f"{outcome.detail.get('subset', CERTIFIED_SUBSET)}")
     lines.append("")
 
     if outcome.status == "refused":

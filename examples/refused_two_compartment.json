@@ -1,0 +1,15 @@
+{
+  "name": "drugZ_two_compartment",
+  "compartments": 2,
+  "elimination": "first_order",
+  "input": "constant_infusion",
+  "R": 100,
+  "parameters": { "ke": [0.3, 0.55], "V": [5, 9] },
+  "threshold": 80,
+  "provenance": {
+    "fit": "popPK 2-cpt model, run 31",
+    "dataset": "PHASE1 pooled",
+    "method": "FOCEI (NONMEM)",
+    "ci": "90% profile-likelihood"
+  }
+}

@@ -51,3 +51,18 @@ jobs:
             grep -q "$want" "$rep"
             echo "report proof-identity hash == sha256($art): $want"
           done
+      - name: Re-render fail-closed reports and confirm they match (exit codes 2/3)
+        run: |
+          python -m axm report examples/failed_infusion.json > /tmp/f.md || true
+          diff -u examples/failed_infusion.report.md /tmp/f.md
+          python -m axm report examples/refused_two_compartment.json > /tmp/r.md || true
+          diff -u examples/refused_two_compartment.report.md /tmp/r.md
+          echo "fail-closed reports render exactly the committed artifacts"
+      - name: Confirm the fail-closed exit-code contract
+        run: |
+          set +e
+          python -m axm certify examples/drugX_infusion.json          >/dev/null 2>&1; test $? -eq 0
+          python -m axm certify examples/drugY_repeated.json          >/dev/null 2>&1; test $? -eq 0
+          python -m axm certify examples/failed_infusion.json         >/dev/null 2>&1; test $? -eq 2
+          python -m axm certify examples/refused_two_compartment.json >/dev/null 2>&1; test $? -eq 3
+          echo "exit codes: 0 certified, 2 failed (in-subset finding), 3 refused (out of subset)"

@@ -1,0 +1,15 @@
+{
+  "name": "drugX_infusion_aggressive",
+  "compartments": 1,
+  "elimination": "first_order",
+  "input": "constant_infusion",
+  "R": 100,
+  "parameters": { "ke": [0.3, 0.55], "V": [5, 9] },
+  "threshold": 40,
+  "provenance": {
+    "fit": "popPK base model, run 14",
+    "dataset": "PHASE1-SAD/MAD pooled",
+    "method": "FOCEI (NONMEM)",
+    "ci": "90% profile-likelihood on ke, V"
+  }
+}

@@ -8,6 +8,8 @@ from __future__ import annotations
 import json
 import pathlib
 
+import pytest
+
 from axm import certify
 from axm.report import proof_hash, report
 
@@ -103,3 +105,16 @@ def test_repeated_report_names_its_schema_and_hash():
     assert "ke_hi·τ < 1" in md
     import hashlib
     assert hashlib.sha256(COMMITTED_LEAN_R.read_bytes()).hexdigest() in md
+
+
+# --- committed fail-closed example reports stay in sync -------------------
+
+@pytest.mark.parametrize("stem", ["failed_infusion", "refused_two_compartment"])
+def test_failclosed_reports_in_sync(stem):
+    spec = json.loads((REPO / "examples" / f"{stem}.json").read_text())
+    out = certify(spec)
+    committed = (REPO / "examples" / f"{stem}.report.md").read_text()
+    assert report(spec, out) == committed
+    # Fail-closed reports must never carry a proof.
+    assert "Proof identity" not in committed
+    assert out.lean is None

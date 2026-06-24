@@ -1,7 +1,7 @@
 # Exposure-safety certificate report — `drugX_infusion`
 
 **Verdict:** `CERTIFIED`  
-**Model class:** one-compartment, first-order elimination, constant continuous IV infusion
+**Target certified class:** one-compartment, first-order elimination, constant continuous IV infusion
 
 ## Theorem (model-relative, conditional)
 

@@ -17,6 +17,53 @@ catastrophic. PK/PD dosing is one place that actually holds:
 - **The decision is regulatory and legible** — *can we justify this dose for all parameter
   values in the fitted CI?*
 
+## Quickstart (5 minutes, for a reviewer)
+
+No Lean toolchain needed to *try* it; you need it only to re-check the proofs yourself.
+
+```bash
+# 1. A certifiable constant-infusion model -> emits kernel-checkable Lean (exit 0)
+python -m axm certify examples/drugX_infusion.json
+
+# 2. A repeated-dose regimen -> the other schema, also certified (exit 0)
+python -m axm certify examples/drugY_repeated.json
+
+# 3. Fail-closed: a model whose exposure can exceed the threshold (exit 2, no Lean)
+python -m axm certify examples/failed_infusion.json
+
+# 4. Fail-closed: a model outside the certified subset (exit 3, no Lean)
+python -m axm certify examples/refused_two_compartment.json
+
+# A full MIDD report for any of them (theorem, assumptions, provenance, proof hash):
+python -m axm report examples/drugX_infusion.json
+```
+
+Pre-rendered reports for all four outcomes are committed so you can read them without running
+anything: [`drugX_infusion`](examples/drugX_infusion.report.md) (certified, infusion),
+[`drugY_repeated`](examples/drugY_repeated.report.md) (certified, repeated dose),
+[`failed_infusion`](examples/failed_infusion.report.md) (in-subset finding),
+[`refused_two_compartment`](examples/refused_two_compartment.report.md) (out of subset).
+
+### How to read a verdict
+
+| Verdict | Exit | Meaning | Emits Lean? |
+|---|---|---|---|
+| `certified` | 0 | The model's exposure provably stays in the declared window for **every** parameter value in the fitted box. | yes — a kernel-checkable proof |
+| `failed` | 2 | In the certified subset, but a corner condition is violated: the model *can* leave the window. **A finding, not an error.** | no |
+| `refused` | 3 | Outside the auto-emittable subset (e.g. 2-compartment, nonlinear elimination). The tool won't certify what it can't prove. | no |
+
+### What a green check means — and what it does not
+
+- **It means:** under the stated one-compartment model and the fitted parameter box, the
+  concentration the model predicts cannot cross the declared threshold — machine-checked by
+  the Lean kernel against Mathlib, reproducibly, in CI.
+- **It does not mean** the drug or dose is safe for a patient. The proof is about the *model*,
+  not the patient. Model misspecification, CI miscalibration, and off-model physiology are out
+  of scope. (See every report's *Model-risk note*.)
+- **You don't have to trust us.** The proof object is checked by CI on each push; the emitted
+  Lean is itself kernel-checked; and each report carries the `sha256` of the exact artifact
+  that was checked. `cd lean && lake exe cache get && lake build` re-checks everything locally.
+
 ## What's here
 
 This repo is the **first move** from the handoff (§9): the smallest non-trivial PK/PD case,

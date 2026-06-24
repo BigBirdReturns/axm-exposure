@@ -1,7 +1,7 @@
 # Exposure-safety certificate report — `drugY_repeated`
 
 **Verdict:** `CERTIFIED`  
-**Model class:** one-compartment, first-order elimination, repeated IV bolus (steady state)
+**Target certified class:** one-compartment, first-order elimination, repeated IV bolus (steady state)
 
 ## Theorem (model-relative, conditional)
 
