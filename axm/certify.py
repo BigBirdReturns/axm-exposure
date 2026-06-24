@@ -8,20 +8,24 @@ quoted in the handoff (§3):
     recognize a class  ->  compute tight bounds  ->  emit a Lean instance of a
     verified schema  ->  fail closed otherwise.
 
-The *only* verified schema wired up for automatic emission here is the
-constant-infusion exposure-safety certificate proved in
-`lean/BioPKPD/ConstantInfusion.lean`
-(`Bio.PKPD.ConstantInfusion.infusion_safety_bound`). Its certificate condition
-is a single rational inequality at the worst-case (smallest-clearance) corner of
-the fitted parameter box, so a concrete instance is closed in Lean by `norm_num`
-— a fully kernel-checkable artifact with no `sorry`.
+Two verified schemas are wired up for automatic emission:
 
-Everything outside that subset **fails closed**: a precise, structured reason and
-*no* emitted Lean. In particular the repeated-dose schema
-(`Bio.PKPD.RepeatedDose.repeated_dose_window`) is *proved* but not auto-emitted,
-because its certificate condition is transcendental in `ke` (it contains
-`exp(-(ke_lo · τ))`) and is not yet reducible to a `norm_num`-dischargeable
-rational; recognizing it returns a refusal that says exactly that.
+* **Constant infusion** — `Bio.PKPD.ConstantInfusion.infusion_safety_bound`. Its
+  certificate condition is a single rational inequality at the worst-case
+  (smallest-clearance) corner of the fitted box.
+* **Repeated dose** — `Bio.PKPD.RepeatedDoseRational.repeated_dose_window_rational`.
+  The steady-state peak/trough conditions are transcendental in `ke` (they contain
+  `exp(-(ke·τ))`), so this schema uses the exact rational envelope
+  `1 - x ≤ exp(-x) ≤ 1/(1+x)` to replace them with *rational* corner conditions
+  that **imply** the transcendental ones. Valid when `ke_hi·τ < 1` (otherwise the
+  lower envelope is uninformative and the tool fails closed, pointing at the
+  transcendental theorem `Bio.PKPD.RepeatedDose.repeated_dose_window`).
+
+In both cases a concrete instance is closed in Lean by `norm_num` — a fully
+kernel-checkable artifact with no `sorry`.
+
+Everything outside these schemas **fails closed**: a precise, structured reason
+and *no* emitted Lean.
 
 Discipline (handoff §2), carried verbatim into the output: a certificate is a
 statement about *the model under explicitly stated, bounded assumptions*, never a
@@ -34,7 +38,7 @@ from dataclasses import dataclass, field
 from fractions import Fraction
 from typing import Any
 
-# The one model class for which this tool will emit a kernel-checkable proof.
+# The model classes for which this tool will emit a kernel-checkable proof.
 CERTIFIED_SUBSET = (
     "one-compartment, first-order elimination, constant continuous IV infusion"
 )
